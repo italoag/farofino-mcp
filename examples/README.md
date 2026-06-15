@@ -17,21 +17,36 @@ This is a relatively safe contract that should pass most security checks.
 To audit these contracts, use the MCP server tools:
 
 ```bash
-# Start the MCP server
-npx farofino-mcp
+# Start the MCP server (Python package — not npm)
+python3 -m farofino_mcp
+# or, if installed as a console script:
+farofino-mcp
 
 # Then use the tools through your MCP client:
+# 0. Run every available analyzer at once (recommended)
+audit_project with contract_path="examples/SimpleToken.sol"
+
 # 1. Read the contract
 read_contract with contract_path="examples/SimpleToken.sol"
 
 # 2. Run pattern analysis
 pattern_analysis with contract_path="examples/SimpleToken.sol"
 
-# 3. Run Slither
+# 3. Run Slither (accepts a file OR a project root directory)
 slither_audit with contract_path="examples/SimpleToken.sol"
 
-# 4. Run Aderyn
+# 4. Run Aderyn (accepts a file OR a project root directory)
 aderyn_audit with contract_path="examples/SimpleToken.sol"
+```
+
+Prefer pointing `audit_project` / `slither_audit` / `aderyn_audit` at a **project
+root** (the folder with `foundry.toml` or `hardhat.config.*`) for contracts that
+import other files (e.g. OpenZeppelin) so imports and remappings resolve.
+
+You can also run the same engine from the command line without the MCP server:
+
+```bash
+python3 -m farofino_mcp.scan examples/SimpleToken.sol --format markdown
 ```
 
 ## Creating Your Own Test Contracts

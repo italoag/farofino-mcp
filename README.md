@@ -116,15 +116,45 @@ farofino-mcp
 
 ### Available Tools
 
-#### 1. slither_audit
+All analysis tools accept either a **single contract file** or a **project root
+directory** (the folder containing `foundry.toml` or `hardhat.config.*`). Point them
+at the project root whenever a contract imports other files (e.g. OpenZeppelin) so
+imports and remappings resolve. Slither/Aderyn results are returned as a **normalized
+findings list** (`severity`, `detector`, `contract`, `function`, `file`, `lines`,
+`description`, `tool`).
 
-Run Slither static analysis on a smart contract.
+#### audit_project (recommended)
+
+Run **all available analyzers** (Slither, Aderyn, heuristic patterns) in one call and
+return a single, merged, normalized report. Skipped tools and per-tool errors are
+reported so you always know what actually ran.
 
 **Parameters:**
 
-- `contract_path` (required): Path to the contract file (.sol or .vy)
+- `contract_path` (required): Path to a contract file or project root directory
+- `tools` (optional): Subset to run, e.g. `["slither", "aderyn", "pattern"]`
+- `detectors` / `exclude_detectors` (optional): forwarded to Slither
+- `solc_version` (optional): solc version to select via `solc-select` (e.g. `0.8.20`)
+
+**Example:**
+
+```json
+{
+  "contract_path": "/path/to/project",
+  "exclude_detectors": "naming-convention"
+}
+```
+
+#### 1. slither_audit
+
+Run Slither static analysis on a smart contract file or project directory.
+
+**Parameters:**
+
+- `contract_path` (required): Path to the contract file (.sol/.vy) or project root
 - `detectors` (optional): Comma-separated list of specific detectors to run
 - `exclude_detectors` (optional): Comma-separated list of detectors to exclude
+- `solc_version` (optional): solc version to select via `solc-select`
 
 **Example:** (replace `/path/to/MyContract.sol` with your actual file path)
 
@@ -338,13 +368,36 @@ python3 -u -m farofino_mcp
 farofino-mcp/
 ├── farofino_mcp/
 │   ├── __init__.py          # Package initialization
-│   └── __main__.py          # Main server implementation
+│   ├── __main__.py          # MCP server (tool definitions + dispatch)
+│   ├── engine.py            # Analysis engine (Slither/Aderyn/pattern + normalization)
+│   ├── schema.py            # Normalized Finding / ScanReport schema
+│   └── scan.py              # CLI scanner (python -m farofino_mcp.scan)
 ├── pyproject.toml           # Python project configuration
 ├── requirements.txt         # Python dependencies
 ├── setup.py                 # Setup configuration
 ├── Dockerfile               # Docker configuration
 └── README.md               # This file
 ```
+
+### Command-line scanner (no MCP host required)
+
+The same engine that backs the MCP tools is available as a CLI. This is what the
+[FaroFino skills](https://github.com/FaroFino/skills) call as a fallback when the MCP
+server is not registered:
+
+```bash
+# Normalized JSON report (default)
+python3 -m farofino_mcp.scan /path/to/project
+
+# Markdown summary table
+python3 -m farofino_mcp.scan /path/to/project --format markdown
+
+# Restrict analyzers and write to a file
+python3 -m farofino_mcp.scan MyContract.sol --tools slither,pattern --output report.json
+```
+
+Exit code is `0` when the scan completes (with or without findings) and `2` on a usage
+error or when no analyzers are available.
 
 ## Troubleshooting
 

@@ -60,6 +60,13 @@ RUN pip3 install --no-cache-dir \
 RUN pipx install --pip-args="--no-cache-dir --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org" slither-analyzer && \
     ln -sf ${PIPX_BIN_DIR}/slither /usr/local/bin/slither
 
+# Install solc-select so the engine can align solc with each contract's pragma
+RUN pip3 install --no-cache-dir \
+    --trusted-host pypi.org \
+    --trusted-host pypi.python.org \
+    --trusted-host files.pythonhosted.org \
+    solc-select && rm -rf ~/.cache/pip
+
 
 
 # Copy source code
